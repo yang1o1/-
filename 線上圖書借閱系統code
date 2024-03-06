@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>線上圖書借閱系統</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body style="background-color: #f0f0f0;">
+    <div id="app" style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+        <h1 style="text-align: center; color: #333;">線上圖書借閱系統</h1>
+        
+        <div v-if="!loggedIn">
+            <h2>註冊</h2>
+            <input type="text" v-model="phoneNumber" placeholder="請輸入手機號碼" style="padding: 8px; margin-bottom: 10px; width: 100%;">
+            <button @click="register" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;">註冊</button>
+        </div>
+
+        <div v-else>
+            <h2>已登入</h2>
+            <button @click="logout" style="padding: 8px 16px; background-color: #f44336; color: white; border: none; border-radius: 3px; cursor: pointer;">登出</button>
+            <br><br>
+            <h2>借閱 / 還書</h2>
+            <select v-model="selectedBook" style="padding: 8px; margin-bottom: 10px; width: 100%;">
+                <option v-for="book in books" :key="book.id" :value="book.id" :disabled="book.borrowed">{{ book.title }}</option>
+            </select>
+            <button @click="borrowBook" style="padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer;">借閱</button>
+            <button @click="returnBook" style="padding: 8px 16px; background-color: #FF5722; color: white; border: none; border-radius: 3px; cursor: pointer;">還書</button>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                phoneNumber: '',
+                loggedIn: false,
+                userId: null,
+                books: [
+                    { id: 1, title: '書籍一', borrowed: false },
+                    { id: 2, title: '書籍二', borrowed: false },
+                    { id: 3, title: '書籍三', borrowed: false },
+                    { id: 4, title: '書籍四', borrowed: false },
+                    { id: 5, title: '書籍五', borrowed: false },
+                    { id: 6, title: '書籍六', borrowed: false },
+                    { id: 7, title: '書籍七', borrowed: false },
+                    { id: 8, title: '書籍八', borrowed: false },
+                    { id: 9, title: '書籍九', borrowed: false },
+                    { id: 10, title: '書籍十', borrowed: false }
+                ],
+                selectedBook: null
+            },
+            methods: {
+                register() {
+                    this.loggedIn = true;
+                    this.userId = this.phoneNumber; 
+                },
+                logout() {
+                    this.loggedIn = false;
+                    this.userId = null;
+                },
+                borrowBook() {
+                    if (this.selectedBook) {
+                        const book = this.books.find(b => b.id === this.selectedBook);
+                        if (book && !book.borrowed) {
+                            book.borrowed = true;
+                            
+                            console.log(`User ${this.userId} borrowed book ${book.title}`);
+                        }
+                    }
+                },
+                returnBook() {
+                    if (this.selectedBook) {
+                        const book = this.books.find(b => b.id === this.selectedBook);
+                        if (book && book.borrowed) {
+                            book.borrowed = false;
+                            
+                            console.log(`User ${this.userId} returned book ${book.title}`);
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
