@@ -1,0 +1,143 @@
+// User.java
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String phoneNumber;
+
+}
+
+// Inventory.java
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class Inventory {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Long bookId;
+    private boolean borrowed;
+
+}
+
+// Book.java
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class Book {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String title;
+
+}
+
+// BorrowingRecord.java
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class BorrowingRecord {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Long userId;
+    private Long bookId;
+    private boolean borrowed;
+
+}
+
+// UserRepository.java
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+
+// InventoryRepository.java
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface InventoryRepository extends JpaRepository<Inventory, Long> {
+}
+
+// BookRepository.java
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface BookRepository extends JpaRepository<Book, Long> {
+}
+
+// BorrowingRecordRepository.java
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface BorrowingRecordRepository extends JpaRepository<BorrowingRecord, Long> {
+}
+
+// LibraryController.java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/library")
+public class LibraryController {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
+    @Autowired
+    private BookRepository bookRepository;
+
+    @Autowired
+    private BorrowingRecordRepository borrowingRecordRepository;
+
+    @PostMapping("/register")
+    public void registerUser(@RequestParam String phoneNumber) {
+        User user = new User();
+        user.setPhoneNumber(phoneNumber);
+        userRepository.save(user);
+    }
+
+    @PostMapping("/borrow")
+    public void borrowBook(@RequestParam Long userId, @RequestParam Long bookId) {
+        Inventory inventory = inventoryRepository.findById(bookId).orElse(null);
+        if (inventory != null && !inventory.isBorrowed()) {
+            inventory.setBorrowed(true);
+            inventoryRepository.save(inventory);
+
+            BorrowingRecord record = new BorrowingRecord();
+            record.setUserId(userId);
+            record.setBookId(bookId);
+            record.setBorrowed(true);
+            borrowingRecordRepository.save(record);
+        }
+    }
+
+    @PostMapping("/return")
+    public void returnBook(@RequestParam Long userId, @RequestParam Long bookId) {
+        Inventory inventory = inventoryRepository.findById(bookId).orElse(null);
+        if (inventory != null && inventory.isBorrowed()) {
+            inventory.setBorrowed(false);
+            inventoryRepository.save(inventory);
+
+            BorrowingRecord record = borrowingRecordRepository.findByUserIdAndBookIdAndBorrowed(userId, bookId, true);
+            if (record != null) {
+                record.setBorrowed(false);
+                borrowingRecordRepository.save(record);
+            }
+        }
+    }
+}
